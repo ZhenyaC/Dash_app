@@ -9,8 +9,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from jupyter_dash import JupyterDash
 import plotly.io as pio
-
-
+import plotly.figure_factory as ff
+import numpy as np
 
 # Define the final page layout
 #layout = dbc.Container([
@@ -29,49 +29,123 @@ import plotly.io as pio
 #    ])
 #])
 
+ytd = pd.read_csv('../multipage-dash-app/ig_ytd.csv', low_memory=False)
+hist_ig = pd.read_csv('../multipage-dash-app/us_ig_cleaned.csv', low_memory=False)
 
+#change date to dtype datetime64[ns]
+ytd['PricingDate']=pd.to_datetime(ytd['PricingDate'])
+this_week=ytd.set_index('PricingDate')
+
+weekly_total=this_week.sort_values('PricingDate', ascending=True).resample('W')[['Size_m','DealId']].agg({'Size_m':'sum', 'DealId':'count'}).tail(1)
+
+weekly_total['Size_m']=weekly_total['Size_m'].map('${:,.0f}'.format)
+
+this_week_total = weekly_total.reset_index().rename(columns={'PricingDate': '2022 YTD', 'DealId':'TRANCHES','Size_m': 'VOLUME'})
+
+fig_weekly_total = ff.create_table(this_week_total)
+
+ytd_by_month = ytd.groupby('month').agg({'DealId': 'count','Size_m': 'sum'}).reset_index().rename(columns={'month': 'MONTH', 'DealId':'TRANCHES','Size_m': 'VOLUME'})
+ytd_by_month['VOLUME']=ytd_by_month['VOLUME'].map('${:,.0f}'.format)
+
+
+fig_ytd_by_month=ff.create_table(ytd_by_month)
+
+issuer_type = ['FIG', 'Corporate']
+ytd_corp_fin = ytd[ytd['IssuerBorrowerType'].isin(issuer_type)].groupby(['month','IssuerBorrowerType']).agg({'Size_m': 'sum'}).reset_index()#.rename(columns={'PricingDate': '2022 YTD', 'DealId':'TRANCHES','Size_m': 'VOLUME'})
+
+ytd_corp_fin['Size_m']=ytd_corp_fin['Size_m'].map('${:,.0f}'.format)
+ytd_corp_fin_month = ytd_corp_fin.pivot(index='month',columns='IssuerBorrowerType', values='Size_m').rename_axis(None, axis=1).reset_index()
+fig_ytd_corp_fin_month = ff.create_table(ytd_corp_fin_month)
+
+include_tenor = [2, 3, 4, 5, 7, 10, 30]
+ratings_maturity =ytd[ytd['Tenor'].isin(include_tenor)][['Size_m', 'ratings', 'normalized_tenor']].groupby(['ratings', 'normalized_tenor'])['Size_m'].sum().reset_index()
+
+ratings_maturity['Size_m'] =ratings_maturity['Size_m'].map('${:,.0f}'.format)
+ratings_maturity_tab = ratings_maturity.pivot(index='normalized_tenor', columns ='ratings', values='Size_m').rename_axis(None, axis=1).reset_index().rename(columns={'normalized_tenor': 'TENOR', '0':'0','A': 'A AMOUNT', 'AA': 'AA AMOUNT', 'AAA': 'AAA AMOUNT', 'BBB':'BBB AMOUNT'})
+
+column_order = ['TENOR','AAA AMOUNT', 'AA AMOUNT', 'A AMOUNT', 'BBB AMOUNT']
+
+ratings_maturity_reordered = ratings_maturity_tab.reindex(column_order, axis=1)
+fig_ratings_mat = ff.create_table(ratings_maturity_reordered)
+
+ytd['Nic'] = pd.to_numeric(ytd['Nic'], errors='coerce')
+ytd_nic_book = ytd[['month', 'Nic', 'tranche_bk_to_cvr']].groupby('month').agg({'Nic':'mean','tranche_bk_to_cvr':'mean'}).round(2).reset_index().rename(columns={'month': 'MONTH', 'Nic':'AVG NIC ','tranche_bk_to_cvr': 'AVG BOOK TO COVER'})
+
+fig_ytd_nic_book = ff.create_table(ytd_nic_book)
+fig_ytd_nic_book.update_layout(autosize=False)
+
+top20_ever = hist_ig.groupby(['PricingDate','DealIssuer']).agg({'Size_m': 'sum'}).sort_values('Size_m', ascending =False).nlargest(20, 'Size_m').reset_index().rename(columns={'PricingDate': 'DATE', 'DealIssuer':'ISSUER','Size_m': 'USD AMOUNT'})
+fig_largest_ever = ff.create_table(top20_ever)
+
+
+top10_ytd = ytd.loc[ytd['IssuerBorrowerType']!= 'FIG'].groupby(['PricingDate','DealIssuer']).agg({'Size_m': 'sum'}).sort_values('Size_m', ascending =False).nlargest(10, 'Size_m').reset_index().rename(columns={'PricingDate': 'DATE', 'DealIssuer':'ISSUER','Size_m': 'USD AMOUNT'})
+top10_ytd['USD AMOUNT']=top10_ytd['USD AMOUNT'].map('${:,.0f}'.format)
+fig_top10_ytd = ff.create_table(top10_ytd)
+
+
+#ggg=dash_table.DataTable(
+#    data=top10_ytd.to_dict('records'),
+#    columns=[{'id': c, 'name': c} for c in top10_ytd.columns],
+#    style_data={
+#        'whiteSpace': 'normal',
+#        'height': 'auto',
+#    },
+#    fill_width=False)
 
 layout = dbc.Container(
     [
         dbc.Row(dbc.Col(html.H2('DEBT TRENDS-OVER DIFFERNET TIME PERIODS', className='text-center text-primary, mb-3'))),  # header row
         
         dbc.Row([  # start of second row
-            dbc.Col([  # first column on second row
-            html.H5('WEEKLY VOLUMES ($US)', className='text-center'),
+            dbc.Col([ # first column on second row
+            html.H5('THIS WEEK ($US)', className='text-center'),
             dcc.Graph(id='chrt-portfolio-main',
-                      #figure=weekly_fig,
-                      style={'height':550}),
+                      responsive=True,
+                      figure=fig_weekly_total,
+                      style={'height':150}),
             html.Hr(),
-            ], width={'size': 8, 'offset': 0, 'order': 1}),  # width first column on second row
+            ], width={'size': 4, 'offset': 0, 'order': 1}),  # width first column on second row
             dbc.Col([  # second column on second row
             html.H5('MORE STATS', className='text-center'),
             dcc.Graph(id='indicators-ptf',
-                      #figure=indicators_ptf,
-                      style={'height':550}),
+                      responsive=True,
+                      figure=fig_ytd_by_month,
+                      style={'height':300}),
             html.Hr()
-            ], width={'size': 2, 'offset': 0, 'order': 2}),  # width second column on second row
+            ], width={'size': 4, 'offset': 0, 'order': 2}),  # width second column on second row
             dbc.Col([  # third column on second row
-            html.H5('OTHER STATS', className='text-center'),
+            html.H5('2022 CORP & FIG', className='text-center'),
             dcc.Graph(id='indicators-sp',
-                      #figure=indicators,
-                      style={'height':550}),
+                      responsive=True,
+                      figure=fig_ytd_corp_fin_month,
+                      style={'height':300}),
             html.Hr()
-            ], width={'size': 2, 'offset': 0, 'order': 3}),  # width third column on second row
+            ], width={'size': 4, 'offset': 0, 'order': 3}),  # width third column on second row
         ]),  # end of second row
         
         dbc.Row([  # start of third row
             dbc.Col([  # first column on third row
-                html.H5('DEBT ADDED BY MONTH (US$)', className='text-center'),
+                html.H5('2022 ISSUANCE BY MATURITIES/RATINGS (US$)', className='text-center'),
                 dcc.Graph(id='chrt-portfolio-secondary',
-                      #figure=m_chart,
-                      style={'height':380}),
-            ], width={'size': 7, 'offset': 0, 'order': 1}),  # width first column on second row
+                          responsive=True,
+                      figure=fig_ratings_mat,
+                      style={'height':300}),
+            ], width={'size': 4, 'offset': 0, 'order': 1}),  # width first column on second row
             dbc.Col([  # second column on third row
-                html.H5('ANNUAL VOLUMES (US$)', className='text-center'),
+                html.H5('2022 AVERAGE NIC/BOOKS', className='text-center'),
                 dcc.Graph(id='pie-top15',
-                      #figure = annual_chart,
-                      style={'height':380}),
-            ], width={'size': 5, 'offset': 0, 'order': 2}),  # width second column on second row
+                          responsive=True,
+                      figure = fig_ytd_nic_book,
+                      style={'height':300}),
+            ], width={'size': 4, 'offset': 0, 'order': 2}),  # width second column on second row
+            dbc.Col([  # third column on second row
+            html.H5('2022 TOP TEN LARGEST DEALS', className='text-center'),
+            dcc.Graph(id='indicators-sp',
+                      responsive=True,
+                      figure=fig_top10_ytd,
+                      style={'height':300}),
+            html.Hr()
+            ], width={'size': 4, 'offset': 0, 'order': 3}),  # width third column on second row
         ])  # end of third row
         
     ], fluid=True)
