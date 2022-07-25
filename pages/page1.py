@@ -10,17 +10,17 @@ from jupyter_dash import JupyterDash
 import plotly.io as pio
 from plotly import figure_factory as ff
 
-ig_deals_cleaned = pd.read_csv("../multipage-dash-app/preprocessed.csv", low_memory=False)
+ig_deals_cleaned = pd.read_csv('../multipage-dash-app/us_ig_cleaned.csv', low_memory=False)
 
 quarterly_stats = ig_deals_cleaned.groupby('quarter').agg({'Size_m': 'sum'}).reset_index().set_index('quarter')
 
 
-sectors_q = ig_deals_cleaned[(ig_deals_cleaned['quarter'] == '2021Q1') | (ig_deals_cleaned['quarter'] == '2022Q1')].groupby(['quarter','Sector'])['Size_m'].sum().sort_values(ascending = False).to_frame().reset_index().rename(columns = {0: 'Amount'}).sort_values('Size_m')
+sectors_q = ig_deals_cleaned[(ig_deals_cleaned['quarter'] == '2021Q2') | (ig_deals_cleaned['quarter'] == '2022Q2')].groupby(['quarter','Sector'])['Size_m'].sum().sort_values(ascending = False).to_frame().reset_index().rename(columns = {0: 'Amount'}).sort_values('Size_m')
 sectors_q=sectors_q.sort_values('Size_m', ascending = False)
 
-sectors_q = ig_deals_cleaned[(ig_deals_cleaned['quarter'] == '2021Q1') | (ig_deals_cleaned['quarter'] == '2022Q1')].groupby(['quarter','Sector'])['Size_m'].sum().sort_values(ascending = False).to_frame().reset_index().rename(columns = {0: 'Amount'}).sort_values('Size_m')
+sectors_q = ig_deals_cleaned[(ig_deals_cleaned['quarter'] == '2021Q2') | (ig_deals_cleaned['quarter'] == '2022Q2')].groupby(['quarter','Sector'])['Size_m'].sum().sort_values(ascending = False).to_frame().reset_index().rename(columns = {0: 'Amount'}).sort_values('Size_m')
 sectors_q=sectors_q.sort_values('Size_m', ascending = False)
-sectors_graph = sectors_q.pivot(index='Sector', columns='quarter', values='Size_m').sort_values(by='2022Q1', ascending =False)
+sectors_graph = sectors_q.pivot(index='Sector', columns='quarter', values='Size_m').sort_values(by='2022Q2', ascending =False)
 
 esg = ig_deals_cleaned.loc[(ig_deals_cleaned['ESG'] ==True) | (ig_deals_cleaned['ESG Type'].notnull()), ['PricingDate', 'quarter','month', 'year', 'week','DealIssuer', 'Sector', 'ESG Type', 'Size_m']].set_index('quarter')
 esg_q_stats = esg.groupby(['quarter','ESG Type']).agg({'Size_m': 'sum'}).reset_index().set_index('quarter')
@@ -34,10 +34,10 @@ sectors_fig = make_subplots(specs=[[{"secondary_y": True}]])
 
 # Add traces
 sectors_fig.add_trace(
-    go.Bar(x=sectors_graph.head(10)['2022Q1']*1e5, y=sectors_graph.head(10).index, name="2022 Q1", orientation="h")
+    go.Bar(x=sectors_graph.head(10)['2022Q2']*1e5, y=sectors_graph.head(10).index, name="2022 Q2", orientation="h")
 )
 sectors_fig.add_trace(
-    go.Bar(x=sectors_graph.head(10)['2021Q1']*1e5, y=sectors_graph.head(10).index,name="2021 Q1", orientation="h")
+    go.Bar(x=sectors_graph.head(10)['2021Q2']*1e5, y=sectors_graph.head(10).index,name="2021 Q2", orientation="h")
 )
 # Add figure title
 sectors_fig.layout.template = CHART_THEME
@@ -69,7 +69,7 @@ chart_q.update_layout(
     #title='Quarterly Volume (USD $)',
     xaxis_tickfont_size=12,
     yaxis=dict(
-        title='Value: $ USD',
+        title='Value: $US',
         titlefont_size=14,
         tickfont_size=12,
         ))
@@ -93,7 +93,7 @@ fig2.update_layout(
 #     title='% variation - Portfolio vs SP500',
     xaxis_tickfont_size=12,
     yaxis=dict(
-        title='% change',
+        title='Value $US',
         titlefont_size=14,
         tickfont_size=12,
         ))
@@ -126,7 +126,7 @@ fig2.update_layout(legend=dict(
 
 layout = dbc.Container(
     [
-        dbc.Row(dbc.Col(html.H2('DEBT TRENDS', className='text-center text-primary, mb-3'))),  # header row
+        dbc.Row(dbc.Col(html.H2('US IG DEBT TRENDS', className='text-center text-primary, mb-3'))),  # header row
         
         dbc.Row([  # start of second row
             dbc.Col([  # first column on second row
