@@ -41,6 +41,7 @@ weekly_total=this_week.sort_values('PricingDate', ascending=True).resample('W')[
 weekly_total['Size_m']=weekly_total['Size_m'].map('${:,.0f}'.format)
 
 this_week_total = weekly_total.reset_index().rename(columns={'PricingDate': '2022 YTD', 'DealId':'TRANCHES','Size_m': 'VOLUME'})
+this_week_total['2022 YTD'].iloc[0] = "This Week"
 
 fig_weekly_total = ff.create_table(this_week_total)
 
@@ -51,10 +52,10 @@ ytd_by_month['VOLUME']=ytd_by_month['VOLUME'].map('${:,.0f}'.format)
 fig_ytd_by_month=ff.create_table(ytd_by_month)
 
 issuer_type = ['FIG', 'Corporate']
-ytd_corp_fin = ytd[ytd['IssuerBorrowerType'].isin(issuer_type)].groupby(['month','IssuerBorrowerType']).agg({'Size_m': 'sum'}).reset_index()#.rename(columns={'PricingDate': '2022 YTD', 'DealId':'TRANCHES','Size_m': 'VOLUME'})
+ytd_corp_fin = ytd[ytd['IssuerBorrowerType'].isin(issuer_type)].groupby(['month','IssuerBorrowerType']).agg({'Size_m': 'sum'}).reset_index().rename(columns={'month': 'MONTH', 'IssuerBorrowerType':'IssuerBorrowerType','Size_m': 'VOLUME'})
 
-ytd_corp_fin['Size_m']=ytd_corp_fin['Size_m'].map('${:,.0f}'.format)
-ytd_corp_fin_month = ytd_corp_fin.pivot(index='month',columns='IssuerBorrowerType', values='Size_m').rename_axis(None, axis=1).reset_index()
+ytd_corp_fin['VOLUME']=ytd_corp_fin['VOLUME'].map('${:,.0f}'.format)
+ytd_corp_fin_month = ytd_corp_fin.pivot(index='MONTH',columns='IssuerBorrowerType', values='VOLUME').rename_axis(None, axis=1).reset_index()
 fig_ytd_corp_fin_month = ff.create_table(ytd_corp_fin_month)
 
 include_tenor = [2, 3, 4, 5, 7, 10, 30]
@@ -80,6 +81,7 @@ fig_largest_ever = ff.create_table(top20_ever)
 
 top10_ytd = ytd.loc[ytd['IssuerBorrowerType']!= 'FIG'].groupby(['PricingDate','DealIssuer']).agg({'Size_m': 'sum'}).sort_values('Size_m', ascending =False).nlargest(10, 'Size_m').reset_index().rename(columns={'PricingDate': 'DATE', 'DealIssuer':'ISSUER','Size_m': 'USD AMOUNT'})
 top10_ytd['USD AMOUNT']=top10_ytd['USD AMOUNT'].map('${:,.0f}'.format)
+top10_ytd['DATE']=top10_ytd['DATE'].map('{:%Y-%m-%d}'.format)
 fig_top10_ytd = ff.create_table(top10_ytd)
 
 
@@ -94,7 +96,7 @@ fig_top10_ytd = ff.create_table(top10_ytd)
 
 layout = dbc.Container(
     [
-        dbc.Row(dbc.Col(html.H2('DEBT TRENDS-OVER DIFFERNET TIME PERIODS', className='text-center text-primary, mb-3'))),  # header row
+        dbc.Row(dbc.Col(html.H2('2022 SNAPSHOT', className='text-center text-primary, mb-3'))),  # header row
         
         dbc.Row([  # start of second row
             dbc.Col([ # first column on second row
@@ -106,7 +108,7 @@ layout = dbc.Container(
             html.Hr(),
             ], width={'size': 4, 'offset': 0, 'order': 1}),  # width first column on second row
             dbc.Col([  # second column on second row
-            html.H5('MORE STATS', className='text-center'),
+            html.H5('2022 ISSUANCE BY MONTH', className='text-center'),
             dcc.Graph(id='indicators-ptf',
                       responsive=True,
                       figure=fig_ytd_by_month,
