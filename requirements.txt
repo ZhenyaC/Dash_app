@@ -5,5 +5,5 @@ plotly==5.9.0
 dash-core-components==2.0.0
 dash-html-components==2.0.0
 dash-table==5.0.0
-numpy-base==1.20.1
-regex==2021.4.4
+#numpy-base==1.20.1
+#regex==2021.4.4
