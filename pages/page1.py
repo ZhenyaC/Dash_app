@@ -10,7 +10,7 @@ from jupyter_dash import JupyterDash
 import plotly.io as pio
 from plotly import figure_factory as ff
 
-ig_deals_cleaned = pd.read_csv('../multipage-dash-app/us_ig_cleaned.csv', low_memory=False)
+ig_deals_cleaned=pd.read_csv('data/us_ig_cleaned.csv', low_memory=False)
 
 quarterly_stats = ig_deals_cleaned.groupby('quarter').agg({'Size_m': 'sum'}).reset_index().set_index('quarter')
 
@@ -103,7 +103,7 @@ fig2.update_layout(legend=dict(
     xanchor="right",
     x=0.99))
 
-ytd = pd.read_csv('../multipage-dash-app/ig_ytd.csv', low_memory=False)
+ytd = pd.read_csv('data/ig_ytd.csv', low_memory=False)
 ytd['PricingDate']=pd.to_datetime(ytd['PricingDate'])
 top10_ytd = ytd.loc[ytd['IssuerBorrowerType']!= 'FIG'].groupby(['PricingDate','DealIssuer']).agg({'Size_m': 'sum'}).sort_values('Size_m', ascending =False).nlargest(10, 'Size_m').reset_index().rename(columns={'PricingDate': 'DATE', 'DealIssuer':'ISSUER','Size_m': 'USD AMOUNT'})
 top10_ytd['USD AMOUNT']=top10_ytd['USD AMOUNT'].map('${:,.0f}'.format)

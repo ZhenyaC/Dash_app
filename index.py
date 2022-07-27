@@ -11,6 +11,7 @@ from pages import page1, page2, page3
 # Connect the navbar to the index
 from components import navbar
 
+server=app.server
 # define the navbar
 nav = navbar.Navbar()
 
@@ -31,8 +32,9 @@ def display_page(pathname):
     if pathname == '/page3':
         return page3.layout    
     else:
-        return "404 Page Error! Please choose a link"
+        return page1.layout
 
 # Run the app on localhost:8050
 if __name__ == '__main__':
     app.run_server(debug=True)
+

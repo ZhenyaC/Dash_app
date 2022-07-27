@@ -10,7 +10,7 @@ from plotly.subplots import make_subplots
 from jupyter_dash import JupyterDash
 import plotly.io as pio
 
-ig_deals_cleaned = pd.read_csv("../multipage-dash-app/us_ig_cleaned.csv", low_memory=False)
+ig_deals_cleaned = pd.read_csv("data/us_ig_cleaned.csv", low_memory=False)
 ig_deals_cleaned['Nic']=pd.to_numeric(ig_deals_cleaned['Nic'], errors='coerce')
 month_stats = ig_deals_cleaned.groupby(['month','IssuerBorrowerType']).agg({'Size_m': 'sum'}).reset_index().set_index('month')
 #weekly_vols = ig_deals_cleaned.groupby(['week','IssuerBorrowerType']).agg({'Size_m': 'sum'}).reset_index().set_index('week')

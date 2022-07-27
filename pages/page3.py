@@ -29,8 +29,8 @@ import numpy as np
 #    ])
 #])
 
-ytd = pd.read_csv('../multipage-dash-app/ig_ytd.csv', low_memory=False)
-hist_ig = pd.read_csv('../multipage-dash-app/us_ig_cleaned.csv', low_memory=False)
+ytd = pd.read_csv('data/ig_ytd.csv', low_memory=False)
+hist_ig = pd.read_csv('data/us_ig_cleaned.csv', low_memory=False)
 
 #change date to dtype datetime64[ns]
 ytd['PricingDate']=pd.to_datetime(ytd['PricingDate'])
