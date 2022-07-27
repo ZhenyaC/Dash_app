@@ -60,7 +60,7 @@ sectors_fig.update_yaxes(autorange="reversed")
 CHART_THEME = 'plotly_white'  # and try plotly_dark
 
 chart_q = go.Figure()  # generating a figure that will be updated in the following lines
-chart_q.add_trace(go.Bar(x=quarterly_stats.index, y=quarterly_stats['Size_m']*1e3,
+chart_q.add_trace(go.Bar(x=quarterly_stats.index, y=quarterly_stats['Size_m']*1e6,
                     name='Global Value'))
 chart_q.layout.template = CHART_THEME
 chart_q.layout.height=500
@@ -69,7 +69,7 @@ chart_q.update_layout(
     #title='Quarterly Volume (USD $)',
     xaxis_tickfont_size=12,
     yaxis=dict(
-        title='Value: $US',
+        title='Value:$US',
         titlefont_size=14,
         tickfont_size=12,
         ))
@@ -79,7 +79,7 @@ chart_q.update_layout(
 
 ### ESG VOLUMES
 fig2 = go.Figure(data=[
-   go.Bar(name='ESG_q', x=esg_q_stats.index, y=esg_q_stats['Size_m']*1e5)
+   go.Bar(name='ESG_q', x=esg_q_stats.index, y=esg_q_stats['Size_m']*1e6)
     #go.Bar(name='SP500', x=plotlydf_portfval['date'], y=plotlydf_portfval['sp500_pctch'])
 ])
 
@@ -93,7 +93,7 @@ fig2.update_layout(
 #     title='% variation - Portfolio vs SP500',
     xaxis_tickfont_size=12,
     yaxis=dict(
-        title='Value $US',
+        title='Value:$US',
         titlefont_size=14,
         tickfont_size=12,
         ))
@@ -102,6 +102,13 @@ fig2.update_layout(legend=dict(
     y=0.99,
     xanchor="right",
     x=0.99))
+
+ytd = pd.read_csv('../multipage-dash-app/ig_ytd.csv', low_memory=False)
+ytd['PricingDate']=pd.to_datetime(ytd['PricingDate'])
+top10_ytd = ytd.loc[ytd['IssuerBorrowerType']!= 'FIG'].groupby(['PricingDate','DealIssuer']).agg({'Size_m': 'sum'}).sort_values('Size_m', ascending =False).nlargest(10, 'Size_m').reset_index().rename(columns={'PricingDate': 'DATE', 'DealIssuer':'ISSUER','Size_m': 'USD AMOUNT'})
+top10_ytd['USD AMOUNT']=top10_ytd['USD AMOUNT'].map('${:,.0f}'.format)
+top10_ytd['DATE']=top10_ytd['DATE'].map('{:%Y-%m-%d}'.format)
+fig_top10_ytd = ff.create_table(top10_ytd)
 
 #fig2.show()
 
@@ -160,9 +167,10 @@ layout = dbc.Container(
                       style={'height':380}),
             ], width={'size': 7, 'offset': 0, 'order': 1}),  # width first column on second row
             dbc.Col([  # second column on third row
-                html.H5('TOP 5 ISSUES', className='text-center'),
+                html.H5('LARGEST DEALS', className='text-center'),
                 dcc.Graph(id='pie-top15',
-                      #figure = fig_table,
+                          responsive=True,
+                      figure = fig_top10_ytd,
                       style={'height':380}),
             ], width={'size': 5, 'offset': 0, 'order': 2}),  # width second column on second row
         ])  # end of third row
