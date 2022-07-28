@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from jupyter_dash import JupyterDash
+#from jupyter_dash import JupyterDash
 import plotly.io as pio
 
 ig_deals_cleaned = pd.read_csv("data/us_ig_cleaned.csv", low_memory=False)
