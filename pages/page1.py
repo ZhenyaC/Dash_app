@@ -105,10 +105,10 @@ fig2.update_layout(legend=dict(
 
 ytd = pd.read_csv('data/ig_ytd.csv', low_memory=False)
 ytd['PricingDate']=pd.to_datetime(ytd['PricingDate'])
-top10_ytd = ytd.loc[ytd['IssuerBorrowerType']!= 'FIG'].groupby(['PricingDate','DealIssuer']).agg({'Size_m': 'sum'}).sort_values('Size_m', ascending =False).nlargest(10, 'Size_m').reset_index().rename(columns={'PricingDate': 'DATE', 'DealIssuer':'ISSUER','Size_m': 'USD AMOUNT'})
-top10_ytd['USD AMOUNT']=top10_ytd['USD AMOUNT'].map('${:,.0f}'.format)
-top10_ytd['DATE']=top10_ytd['DATE'].map('{:%Y-%m-%d}'.format)
-fig_top10_ytd = ff.create_table(top10_ytd)
+top10_this_quarter = ytd.loc[(ytd['quarter']=='2022Q2') & (ytd['IssuerBorrowerType']!= 'FIG')].groupby(['PricingDate','DealIssuer']).agg({'Size_m': 'sum'}).sort_values('Size_m', ascending =False).nlargest(10, 'Size_m').reset_index().rename(columns={'PricingDate': 'DATE', 'DealIssuer':'ISSUER','Size_m': 'USD AMOUNT'})
+top10_this_quarter['USD AMOUNT']=top10_this_quarter['USD AMOUNT'].map('${:,.0f}'.format)
+top10_this_quarter['DATE']=top10_this_quarter['DATE'].map('{:%Y-%m-%d}'.format)
+fig_top10_this_quarter = ff.create_table(top10_this_quarter)
 
 #fig2.show()
 
@@ -133,11 +133,11 @@ fig_top10_ytd = ff.create_table(top10_ytd)
 
 layout = dbc.Container(
     [
-        dbc.Row(dbc.Col(html.H2('US IG DEBT TRENDS', className='text-center text-primary, mb-3'))),  # header row
+        dbc.Row(dbc.Col(html.H2('2022 2Q US INVESTMENT GRADE DEBT', className='text-center text-primary, mb-3'))),  # header row
         
         dbc.Row([  # start of second row
             dbc.Col([  # first column on second row
-            html.H5('QUARTELY VOLUMES ($USD)', className='text-center'),
+            html.H5('QUARTELY VOLUMES ($US)', className='text-center'),
             dcc.Graph(id='chrt-portfolio-main',
                       figure=chart_q,
                       style={'height':550}),
@@ -161,16 +161,16 @@ layout = dbc.Container(
         
         dbc.Row([  # start of third row
             dbc.Col([  # first column on third row
-                html.H5('ESG SUSTAINABLE GREEN', className='text-center'),
+                html.H5('ESG SUSTAINABLE GREEN ISSUANCE (US$)', className='text-center'),
                 dcc.Graph(id='chrt-portfolio-secondary',
                       figure=fig2,
                       style={'height':380}),
             ], width={'size': 7, 'offset': 0, 'order': 1}),  # width first column on second row
             dbc.Col([  # second column on third row
-                html.H5('LARGEST DEALS', className='text-center'),
+                html.H5('LARGEST DEALS 2Q 2022', className='text-center'),
                 dcc.Graph(id='pie-top15',
                           responsive=True,
-                      figure = fig_top10_ytd,
+                      figure = fig_top10_this_quarter,
                       style={'height':380}),
             ], width={'size': 5, 'offset': 0, 'order': 2}),  # width second column on second row
         ])  # end of third row
