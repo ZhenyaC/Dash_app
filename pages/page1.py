@@ -109,6 +109,16 @@ top10_this_quarter = ytd.loc[(ytd['quarter']=='2022Q2') & (ytd['IssuerBorrowerTy
 top10_this_quarter['USD AMOUNT']=top10_this_quarter['USD AMOUNT'].map('${:,.0f}'.format)
 top10_this_quarter['DATE']=top10_this_quarter['DATE'].map('{:%Y-%m-%d}'.format)
 fig_top10_this_quarter = ff.create_table(top10_this_quarter)
+new_layouts = {
+    -0.45: -0.45,
+    0.55: 0.10,
+    1.55: 1.65
+}
+for annotation in fig_top10_this_quarter.layout['annotations']:
+    annotation['x'] = new_layouts[annotation['x']]
+fig_top10_this_quarter.layout['xaxis']['tickmode'] = 'array'
+fig_top10_this_quarter.layout['xaxis']['tickvals'] = [x-0.05 for x in new_layouts.values()]
+
 
 #fig2.show()
 
@@ -124,7 +134,7 @@ fig_top10_this_quarter = ff.create_table(top10_this_quarter)
 #       ]), 
 #       dbc.Col([
 #           html.P("This is column 2."), 
-#           html.P("You can add many cool components using the bootstrap dash components library."),
+#           html.P("the bootstrap dash components library."),
 #       ])
 #   ])
 #])
@@ -167,7 +177,7 @@ layout = dbc.Container(
                       style={'height':380}),
             ], width={'size': 7, 'offset': 0, 'order': 1}),  # width first column on second row
             dbc.Col([  # second column on third row
-                html.H5('LARGEST DEALS 2Q 2022', className='text-center'),
+                html.H5('LARGEST DEALS 2Q 2022 (Value $m)', className='text-center'),
                 dcc.Graph(id='pie-top15',
                           responsive=True,
                       figure = fig_top10_this_quarter,

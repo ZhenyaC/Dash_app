@@ -9,9 +9,9 @@ def Navbar():
     layout = html.Div([
         dbc.NavbarSimple(
             children=[
-                dbc.NavItem(dbc.NavLink("Page 1", href="/page1")),
-                dbc.NavItem(dbc.NavLink("Page 2", href="/page2")),
-                dbc.NavItem(dbc.NavLink("Page 3", href="/page3"))
+                dbc.NavItem(dbc.NavLink("Scorecard", href="/page1")),
+                dbc.NavItem(dbc.NavLink("Trends", href="/page2")),
+                dbc.NavItem(dbc.NavLink("Summaries", href="/page3"))
             ] ,
             brand="DEBT ANALYTICS",
             brand_href="/page1",

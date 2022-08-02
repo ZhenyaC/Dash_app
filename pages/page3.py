@@ -63,6 +63,7 @@ ratings_maturity =ytd[ytd['Tenor'].isin(include_tenor)][['Size_m', 'ratings', 'n
 
 ratings_maturity['Size_m'] =ratings_maturity['Size_m'].map('${:,.0f}'.format)
 ratings_maturity_tab = ratings_maturity.pivot(index='normalized_tenor', columns ='ratings', values='Size_m').rename_axis(None, axis=1).reset_index().rename(columns={'normalized_tenor': 'TENOR', '0':'0','A': 'A AMOUNT', 'AA': 'AA AMOUNT', 'AAA': 'AAA AMOUNT', 'BBB':'BBB AMOUNT'})
+ratings_maturity_tab=ratings_maturity_tab.fillna(0)
 
 column_order = ['TENOR','AAA AMOUNT', 'AA AMOUNT', 'A AMOUNT', 'BBB AMOUNT']
 
@@ -83,7 +84,16 @@ top10_ytd = ytd.loc[ytd['IssuerBorrowerType']!= 'FIG'].groupby(['PricingDate','D
 top10_ytd['USD AMOUNT']=top10_ytd['USD AMOUNT'].map('${:,.0f}'.format)
 top10_ytd['DATE']=top10_ytd['DATE'].map('{:%Y-%m-%d}'.format)
 fig_top10_ytd = ff.create_table(top10_ytd)
+new_layouts = {
+    -0.45: -0.45,
+    0.55: 0.10,
+    1.55: 1.65
+}
+for annotation in fig_top10_ytd.layout['annotations']:
+    annotation['x'] = new_layouts[annotation['x']]
 
+fig_top10_ytd.layout['xaxis']['tickmode'] = 'array'
+fig_top10_ytd.layout['xaxis']['tickvals'] = [x-0.05 for x in new_layouts.values()]
 
 #ggg=dash_table.DataTable(
 #    data=top10_ytd.to_dict('records'),
@@ -100,7 +110,7 @@ layout = dbc.Container(
         
         dbc.Row([  # start of second row
             dbc.Col([ # first column on second row
-            html.H5('THIS WEEK ($US)', className='text-center'),
+            html.H5('THIS WEEK (Value $m)', className='text-center'),
             dcc.Graph(id='chrt-portfolio-main',
                       responsive=True,
                       figure=fig_weekly_total,
@@ -108,7 +118,7 @@ layout = dbc.Container(
             html.Hr(),
             ], width={'size': 4, 'offset': 0, 'order': 1}),  # width first column on second row
             dbc.Col([  # second column on second row
-            html.H5('2022 ISSUANCE BY MONTH', className='text-center'),
+            html.H5('2022 ISSUANCE BY MONTH (Value $m)', className='text-center'),
             dcc.Graph(id='indicators-ptf',
                       responsive=True,
                       figure=fig_ytd_by_month,
@@ -116,7 +126,7 @@ layout = dbc.Container(
             html.Hr()
             ], width={'size': 4, 'offset': 0, 'order': 2}),  # width second column on second row
             dbc.Col([  # third column on second row
-            html.H5('2022 CORP & FIG', className='text-center'),
+            html.H5('2022 CORP & FIG (Value $m)', className='text-center'),
             dcc.Graph(id='indicators-sp',
                       responsive=True,
                       figure=fig_ytd_corp_fin_month,
@@ -127,7 +137,7 @@ layout = dbc.Container(
         
         dbc.Row([  # start of third row
             dbc.Col([  # first column on third row
-                html.H5('2022 ISSUANCE BY MATURITIES/RATINGS (US$)', className='text-center'),
+                html.H5('2022 ISSUANCE BY MATURITIES/RATINGS (Value $m)', className='text-center'),
                 dcc.Graph(id='chrt-portfolio-secondary',
                           responsive=True,
                       figure=fig_ratings_mat,
@@ -141,7 +151,7 @@ layout = dbc.Container(
                       style={'height':300}),
             ], width={'size': 4, 'offset': 0, 'order': 2}),  # width second column on second row
             dbc.Col([  # third column on second row
-            html.H5('2022 TOP TEN LARGEST DEALS', className='text-center'),
+            html.H5('2022 TOP TEN LARGEST DEALS (Value $m)', className='text-center'),
             dcc.Graph(id='indicators-sp',
                       responsive=True,
                       figure=fig_top10_ytd,

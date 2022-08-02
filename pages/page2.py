@@ -12,7 +12,7 @@ import plotly.io as pio
 
 ig_deals_cleaned = pd.read_csv("data/us_ig_cleaned.csv", low_memory=False)
 ig_deals_cleaned['Nic']=pd.to_numeric(ig_deals_cleaned['Nic'], errors='coerce')
-month_stats = ig_deals_cleaned.groupby(['month','IssuerBorrowerType']).agg({'Size_m': 'sum'}).reset_index().set_index('month')
+month_stats = ig_deals_cleaned.groupby('month').agg({'Size_m': 'sum'}).reset_index().set_index('month')
 #weekly_vols = ig_deals_cleaned.groupby(['week','IssuerBorrowerType']).agg({'Size_m': 'sum'}).reset_index().set_index('week')
 weekly_vols =ig_deals_cleaned.groupby('week').agg({'Book_Size': 'sum','Size_m': 'sum', 'tranche_bk_to_cvr':'mean', 'Nic':'mean'}).reset_index()
 annual_vols= ig_deals_cleaned.groupby('year').agg({'Size_m': 'sum'})
@@ -48,6 +48,7 @@ weekly_fig.update_layout(
         titlefont_size=14,
         tickfont_size=12,
         ))
+weekly_fig.update_yaxes(title_text='New Issue Concession (basis points)', secondary_y =True)
 
 # Define the final page layout
 #layout = dbc.Container([
@@ -87,7 +88,7 @@ indicators_ptf.add_trace(go.Indicator(
     mode = "number+delta",
     value = int(todays_count),
     #number = {'suffix': " bn"},
-    title = {"text": "<br><span style='font-size:0.7em;color:gray'>Today's Count</span>"},
+    title = {"text": "<br><span style='font-size:0.7em;color:gray'>Today's Number of Deals</span>"},
     #delta = {'position': "bottom", 'reference': 0, 'relative': False},
     domain = {'row': 0, 'column': 0}))
 
@@ -163,7 +164,7 @@ indicators.update_layout(
 
 layout = dbc.Container(
     [
-        dbc.Row(dbc.Col(html.H2('DEBT TRENDS-OVER DIFFERNET TIME PERIODS', className='text-center text-primary, mb-3'))),  # header row
+        dbc.Row(dbc.Col(html.H2('DEBT TRENDS-OVER DIFFERENT TIME PERIODS', className='text-center text-primary, mb-3'))),  # header row
         
         dbc.Row([  # start of second row
             dbc.Col([  # first column on second row
